@@ -40,6 +40,14 @@ public class MainActivity extends AppCompatActivity {
 
         xmlFile = new File(getFileStreamPath(fileName).getPath());
 
+        final EditText editText_encrypt = findViewById(R.id.editText_encrypt);
+        editText_encrypt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                editText_encrypt.setText("");
+            }
+        });
+
         final Button buttonEncrypt = findViewById(R.id.button_encrypt);
         buttonEncrypt.setOnClickListener(new View.OnClickListener(){
             public void onClick(View v) {
