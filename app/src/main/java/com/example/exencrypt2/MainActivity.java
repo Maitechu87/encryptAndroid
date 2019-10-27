@@ -22,6 +22,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Calendar;
+import java.util.Scanner;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -33,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private File xmlFile;
     private final String fileName = "register.xml";
     private String tagData = "data";
+    private boolean fileExists = false;
 
     int contador = 0;
 
@@ -58,48 +60,90 @@ public class MainActivity extends AppCompatActivity {
         final Button buttonEncrypt = findViewById(R.id.button_encrypt);
         buttonEncrypt.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                fileExists = xmlFile.exists();
                 final EditText text = findViewById(R.id.editText_encrypt);
                 contador++;
-                saveText(text.getText().toString(),contador);
+                saveText(text.getText().toString(), contador);
                 result.setText("OK");
             }
         });
-    }
-
-    /// añadido
-    private static void writeToFile(File archivo, String datos) throws IOException {
-        RandomAccessFile file = new RandomAccessFile(archivo, "rw");
-        file.seek(-15);
-        file.write(datos.getBytes());
-        file.close();
     }
 
     //añadiendo el append true, añade la info al final del fichero
 
     protected void saveText(String text, int contador) {
         try {
-            FileOutputStream fileOutputStream = new FileOutputStream(xmlFile, true);
+            RandomAccessFile randomAccessFile = null;
+            String lastLine = null;
+
+            if (fileExists) {
+                try {
+                    randomAccessFile = new RandomAccessFile(xmlFile, "rw");
+                    randomAccessFile.seek(0);
+
+                    final Scanner scanner = new Scanner(xmlFile);
+                    int lastLineOffset = 0;
+                    int lastLineLength = 0;
+
+                    while (scanner.hasNextLine()) {
+                        // +1 is for end line symbol
+                        lastLine = scanner.nextLine();
+                        lastLineLength = lastLine.length() + 2;
+                        lastLineOffset += lastLineLength;
+                    }
+
+                    // No hace falta coger la ultima linea </content_file>
+                    lastLineOffset -= lastLineLength;
+
+                    // hemos cogido toda la string hasta la última linea menos el tag </content_file>
+                    randomAccessFile.seek(lastLineOffset);
+
+                } catch(FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                try {
+                    randomAccessFile = new RandomAccessFile(xmlFile, "rw");
+                } catch(FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+
             //Creamos el serializer
             XmlSerializer xmlSerializer = Xml.newSerializer();
             //Para escribir las etiquetas xml
             StringWriter writer = new StringWriter();
-
             ////Asignamos el resultado del serializer al fichero
             xmlSerializer.setOutput(writer);
-            xmlSerializer.startDocument("UTF-8", true);
-            xmlSerializer.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
 
+            if (!fileExists) {
+                xmlSerializer.startDocument("UTF-8", true);
+                xmlSerializer.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
+                xmlSerializer.startTag(null, "content_file");
+            } else {
+                xmlSerializer.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
+            }
 
-            xmlSerializer.startTag(null, "content_file");
             saveData(xmlSerializer, text, contador);
-            xmlSerializer.endTag(null, "content_file");
+
+            if (!fileExists) {
+                xmlSerializer.endTag(null, "content_file");
+            }
+
+            xmlSerializer.flush();
 
             //finalizar doc
-            xmlSerializer.endDocument();
-            xmlSerializer.flush();
-            String dataWrite = writer.toString();
-            fileOutputStream.write(dataWrite.getBytes());
-            fileOutputStream.close();
+            if (lastLine != null) {
+                xmlSerializer.endDocument();
+
+                // Append la última linea que será el cierre del tag content_file
+                writer.append("\n" + lastLine);
+            }
+
+            randomAccessFile.writeBytes(writer.toString() + "\n");
+            randomAccessFile.close();
 
 
         } catch (FileNotFoundException e) {
@@ -156,4 +200,5 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
 }
