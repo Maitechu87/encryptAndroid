@@ -7,6 +7,7 @@ import android.util.Xml;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import org.xmlpull.v1.XmlSerializer;
 
@@ -14,6 +15,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.io.StringWriter;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -31,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private File xmlFile;
     private final String fileName = "register.xml";
     private String tagData = "data";
+    int contador = 0;
 
 
     @Override
@@ -40,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
 
         xmlFile = new File(getFileStreamPath(fileName).getPath());
 
+        //declaro el cuadro de texto y con el listener se quedará el campo vacío al hacer click
         final EditText editText_encrypt = findViewById(R.id.editText_encrypt);
         editText_encrypt.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -48,30 +52,47 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //declaro botón para encriptar y un textView que informe OK cuando se ha clickado
+        final TextView result = findViewById(R.id.result);
         final Button buttonEncrypt = findViewById(R.id.button_encrypt);
-        buttonEncrypt.setOnClickListener(new View.OnClickListener(){
+        buttonEncrypt.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 final EditText text = findViewById(R.id.editText_encrypt);
-                saveText(text.getText().toString());
+                contador++;
+                saveText(text.getText().toString(),contador);
+                result.setText("OK");
             }
         });
     }
 
-    protected void saveText(String text) {
+    /// añadido
+    private static void writeToFile(File archivo, String datos) throws IOException {
+        RandomAccessFile file = new RandomAccessFile(archivo, "rw");
+        file.seek(-15);
+        file.write(datos.getBytes());
+        file.close();
+    }
+
+    //añadiendo el append true, añade la info al final del fichero
+
+
+    protected void saveText(String text, int contador) {
         try {
-            FileOutputStream fileOutputStream = new FileOutputStream(xmlFile);
+            FileOutputStream fileOutputStream = new FileOutputStream(xmlFile, true);
+            //Creamos el serializer
             XmlSerializer xmlSerializer = Xml.newSerializer();
+            //Para escribir las etiquetas xml
             StringWriter writer = new StringWriter();
 
-
-            // Init file XML
+            ////Asignamos el resultado del serializer al fichero
             xmlSerializer.setOutput(writer);
             xmlSerializer.startDocument("UTF-8", true);
             xmlSerializer.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
 
-            xmlSerializer.startTag(null, "content_file");
 
+            xmlSerializer.startTag(null, "content_file");
             xmlSerializer.startTag(null, tagData);
+            xmlSerializer.attribute(null,"numero", String.valueOf(contador));
             xmlSerializer.startTag(null, "time");
             xmlSerializer.text(Calendar.getInstance().getTime().toString());
             xmlSerializer.endTag(null, "time");
@@ -82,21 +103,21 @@ public class MainActivity extends AppCompatActivity {
             xmlSerializer.text(encryptText(text));
             xmlSerializer.endTag(null, "cipher_text");
             xmlSerializer.endTag(null, tagData);
-
-            // Close file XML
             xmlSerializer.endTag(null, "content_file");
+
+            //finalizar doc
             xmlSerializer.endDocument();
             xmlSerializer.flush();
             String dataWrite = writer.toString();
             fileOutputStream.write(dataWrite.getBytes());
             fileOutputStream.close();
 
+
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
 
     }
 
@@ -122,6 +143,7 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             return "";
         }
+
 
     }
 }
