@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private File xmlFile;
     private final String fileName = "register.xml";
     private String tagData = "data";
+
     int contador = 0;
 
 
@@ -75,7 +76,6 @@ public class MainActivity extends AppCompatActivity {
 
     //añadiendo el append true, añade la info al final del fichero
 
-
     protected void saveText(String text, int contador) {
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(xmlFile, true);
@@ -91,18 +91,7 @@ public class MainActivity extends AppCompatActivity {
 
 
             xmlSerializer.startTag(null, "content_file");
-            xmlSerializer.startTag(null, tagData);
-            xmlSerializer.attribute(null,"numero", String.valueOf(contador));
-            xmlSerializer.startTag(null, "time");
-            xmlSerializer.text(Calendar.getInstance().getTime().toString());
-            xmlSerializer.endTag(null, "time");
-            xmlSerializer.startTag(null, "text");
-            xmlSerializer.text(text);
-            xmlSerializer.endTag(null, "text");
-            xmlSerializer.startTag(null, "cipher_text");
-            xmlSerializer.text(encryptText(text));
-            xmlSerializer.endTag(null, "cipher_text");
-            xmlSerializer.endTag(null, tagData);
+            saveData(xmlSerializer, text, contador);
             xmlSerializer.endTag(null, "content_file");
 
             //finalizar doc
@@ -145,5 +134,26 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
+    }
+
+    // Guarda la etiqueta Data de con el formato correcto usando el xmlSerializer
+    protected void saveData(XmlSerializer xmlSerializer, String text, int contador) {
+
+        try {
+            xmlSerializer.startTag(null, tagData);
+            xmlSerializer.attribute(null,"numero", String.valueOf(contador));
+            xmlSerializer.startTag(null, "time");
+            xmlSerializer.text(Calendar.getInstance().getTime().toString());
+            xmlSerializer.endTag(null, "time");
+            xmlSerializer.startTag(null, "text");
+            xmlSerializer.text(text);
+            xmlSerializer.endTag(null, "text");
+            xmlSerializer.startTag(null, "cipher_text");
+            xmlSerializer.text(encryptText(text));
+            xmlSerializer.endTag(null, "cipher_text");
+            xmlSerializer.endTag(null, tagData);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
