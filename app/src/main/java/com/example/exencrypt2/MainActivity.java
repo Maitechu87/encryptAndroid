@@ -69,13 +69,13 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    //añadiendo el append true, añade la info al final del fichero
+
 
     protected void saveText(String text, int contador) {
         try {
             RandomAccessFile randomAccessFile = null;
             String lastLine = null;
-
+            //si el fichero existe
             if (fileExists) {
                 try {
                     randomAccessFile = new RandomAccessFile(xmlFile, "rw");
@@ -88,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
                     while (scanner.hasNextLine()) {
                         // +1 is for end line symbol
                         lastLine = scanner.nextLine();
-                        lastLineLength = lastLine.length() + 2;
+                        lastLineLength = lastLine.length() +2;
                         lastLineOffset += lastLineLength;
                     }
 
@@ -139,10 +139,10 @@ public class MainActivity extends AppCompatActivity {
                 xmlSerializer.endDocument();
 
                 // Append la última linea que será el cierre del tag content_file
-                writer.append("\n" + lastLine);
+                writer.append("\r\n"+lastLine);
             }
 
-            randomAccessFile.writeBytes(writer.toString() + "\n");
+            randomAccessFile.writeBytes(writer.toString());
             randomAccessFile.close();
 
 
