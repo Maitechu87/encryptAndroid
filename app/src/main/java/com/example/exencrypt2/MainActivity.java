@@ -73,9 +73,11 @@ public class MainActivity extends AppCompatActivity {
 
     protected void saveText(String text, int contador) {
         try {
+            //RandomAcessFile se utiliza para acceder a un fichero de forma aleatoria.
+            //Modo RW abre el fichero en modo lectura y escritura. Si el fichero no existe se crea.
+
             RandomAccessFile randomAccessFile = null;
             String lastLine = null;
-            //si el fichero existe
             if (fileExists) {
                 try {
                     randomAccessFile = new RandomAccessFile(xmlFile, "rw");
@@ -86,13 +88,14 @@ public class MainActivity extends AppCompatActivity {
                     int lastLineLength = 0;
 
                     while (scanner.hasNextLine()) {
-                        // +1 is for end line symbol
+                        // para leer linea por linea y conocer el length del fichero y de la última linea
                         lastLine = scanner.nextLine();
                         lastLineLength = lastLine.length() +2;
                         lastLineOffset += lastLineLength;
                     }
 
-                    // No hace falta coger la ultima linea </content_file>
+                    // No hace falta coger la ultima linea </content_file> lastLineOffset indica el
+                    //lugar donde se pondrá el puntero para escribir
                     lastLineOffset -= lastLineLength;
 
                     // hemos cogido toda la string hasta la última linea menos el tag </content_file>
